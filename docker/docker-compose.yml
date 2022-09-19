@@ -32,16 +32,16 @@ services:
       - 100.86.230.92:9300:9300
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.10.1
+    image: docker.elastic.co/kibana/kibana:latest
     container_name: kibana
     environment:
       SERVER_NAME: localhost
       ELASTICSEARCH_URL: http://elasticsearch:9200/
     ports:
-      - 5601:5601
+      - 100.86.230.92:5601:5601
     volumes:
-      - "/mnt/tank/docker/volumes/kibana/logs:/var/log:rw"
-      - "/mnt/tank/docker/volumes/kibana/kibana:/usr/share/kibana:rw"
+      - "/home1/santiago/docker/volumes/kibana/logs:/var/log:rw"
+      - "/home1/santiago/docker/volumes/kibana/kibana:/usr/share/kibana:rw"
     ulimits:
       nproc: 65535
       memlock:
@@ -50,22 +50,8 @@ services:
     cap_add:
       - ALL
     networks:
-      - esnet
+      - elastic
 
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:latest
-    container_name: kibana
-    environment:
-      SERVER_NAME: 127.0.0.1
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    ports:
-      - 100.86.230.92:5601:5601
-    networks:
-      - esnet
-    depends_on:
-      - elasticsearch
-    restart: "unless-stopped"
 
 networks:
-  esnet:
+  elastic:
