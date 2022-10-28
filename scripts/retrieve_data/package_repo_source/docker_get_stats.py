@@ -21,27 +21,35 @@ def parse_commandline():
 
     description = "This script queries the docker hub API to get metadata about the most downloaded images"
     usage='''
-    python get_stats_docker.py -o /path/to/file
+    python docker_get_stats.py -o /path/to/file
     \t-v --version\t\t\tPrint version
     '''
 
     parser = argparse.ArgumentParser(description=description, usage=usage)
 
     parser.add_argument('-v', '--version',  action='version', version='%(prog)s '+version)
-    parser.add_argument('-o', '--out', help='output file (default is raw JSON output)', type=str, default='./stats_docker.json')
+    parser.add_argument('-o', '--out', help='output file (default is raw JSON output)', type=str, default='./docker_stats.json')
+    # if the quiet argument is passed, the script will not print the results to screen
+    parser.add_argument('-q', '--quiet', help='do not print results to screen', action='store_true')
 
     args = parser.parse_args()
     outputfile = args.out
+    quiet = args.quiet
 
     if outputfile[-1] == "/":
-        outputfile = outputfile+"stats_docker.json"
-    return outputfile
+        outputfile = outputfile+"docker_stats.json"
+    return {"outputfile": outputfile,
+            "quiet": quiet}
 
 
 
 def main ():
 
-    outfile = parse_commandline()
+    # Parse commandline
+    settings = parse_commandline()
+
+    outfile = settings["outputfile"]
+    quiet = settings["quiet"]
 
     # Query docker hub API
     packages_information = query_dockerhub_api()
@@ -56,7 +64,8 @@ def main ():
         jsonfile.write(json_object)
 
     #  Print the results to screen
-    print(json_object)
+    if not quiet:
+        print(json_object)
 
 
 
