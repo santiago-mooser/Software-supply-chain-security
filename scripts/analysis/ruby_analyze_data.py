@@ -52,9 +52,9 @@ def parse_commandline():
     parser = argparse.ArgumentParser(description=description, usage=usage)
 
     parser.add_argument('-v', '--version',  action='version', version='%(prog)s '+version)
-    parser.add_argument('-d', '--data-file', help='output file (default is raw JSON output)', type=str, default='./stats_ruby.json')
+    parser.add_argument('-d', '--data-file', help='output file (default is raw JSON output)', type=str, default='./data/package_repo_data/ruby_stats.json')
     # Folder where to clone git repos
-    parser.add_argument('-o', '--output-folder', help='output folder (default is ./ruby_repos)', type=str, default='./ruby_repos')
+    parser.add_argument('-o', '--output-folder', help='output folder (default is ./ruby_repos)', type=str, default='./analysis/ruby_repos')
 
     args = parser.parse_args()
     outputfile = args.data_file
@@ -89,7 +89,7 @@ def process_data(datafile):
     # Extract source code repositories
     repositories, errors = extract_source_code_repositories(data)
 
-    with open("log.json", 'q') as f:
+    with open("log.json", 'w') as f:
         log_data = {"errors": errors}
         # write to json file
         json.dump(log_data, f, indent=4)

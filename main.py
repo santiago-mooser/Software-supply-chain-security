@@ -1,8 +1,35 @@
-#!/bin/python
+#!/bin/env python
 import os
 from tabulate import tabulate
 import time
 from datetime import datetime
+
+def run_analysis():
+    os.system('clear')
+    prompt = "\nAvailable analysis scripts:\n"
+    files = os.listdir("scripts/analysis")
+    x = 1
+    for file_ in files:
+        prompt += f"{x}. {file_[:-3]}\n"
+        x+=1
+    prompt += "\n0. Return to menu\n"
+    prompt += f"\nWhich analysis script would you like to run? [1-{x-1}]: "
+
+    while True:
+        script = input(prompt)
+        # If the user imputs a non-integer, ask them to input again
+        try:
+            script_number = int(script)
+        except ValueError:
+            print("Please enter a valid number")
+            continue
+        if script_number == 0:
+            break
+        print(f"Running {files[script_number-1]}   \t...", flush=True)
+        os.system(f'python3 scripts/analysis/{files[script_number-1]}')
+        print(f"{files[script_number-1]}   \t[\033[0;32m\u2714\033[0m]")
+        print("")
+    return
 
 def view_data():
     # Clear the screen
@@ -31,9 +58,22 @@ def view_data():
     data_files = list(zip(data_files, data_files_modified))
     headers = ["File", "Last modified"]
     prompt += tabulate(data_files, headers=headers, tablefmt="fancy_grid")
+    prompt +='''
+    1. Update data
+    2. Run analysis
 
-    print(prompt)
-    return
+    0. Return to main menu
+
+    Enter your choice: '''
+
+    while(True):
+        choice = input(prompt)
+        if choice == '1':
+            return update_data()
+        elif choice == '2':
+            return run_analysis()
+        elif choice == '0':
+            return
 
 def update_data():
 
@@ -116,6 +156,8 @@ if __name__ == "__main__":
         os.mkdir("data/github_data")
     if not os.path.exists("data/package_repo_data"):
         os.mkdir("data/package_repo_data")
+    if not os.path.exists("analysis"):
+        os.mkdir("analysis")
 
     print(splash_screen)
     print(options)
@@ -128,9 +170,11 @@ if __name__ == "__main__":
             print(options)
         elif choice == '2':
             view_data()
+            os.system('clear')
+            print(splash_screen)
             print(options)
         elif choice == '3':
-            print("Run analysis")
+            run_analysis()
             os.system('clear')
             print(splash_screen)
             print(options)
