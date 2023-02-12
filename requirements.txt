@@ -1,2 +1,5 @@
 tabulate
 requests
+elasticsearch
+GitPython
+tqdm
