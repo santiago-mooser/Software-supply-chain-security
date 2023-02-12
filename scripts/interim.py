@@ -31,10 +31,18 @@ print("\nCloning complete\n")
 
 analysis_pool = Pool(5)
 # list comprehension to appent "tmp" to all keys to the keys of hte parsed_data dict
-paths = [f"/app/repos/{key}" for key in parsed_data.keys()]
-print(f"Paths: {paths}")
-results = analysis_pool.map(code_analysis.run_analysis, paths,)
+args = [(key, "/app/repos/") for key in parsed_data.keys()]
+print(f"Paths: {args}")
+results = analysis_pool.map(code_analysis.run_analysis, args,)
 analysis_pool.close()
 analysis_pool.join()
 
-print(results)
+print("\nAnalysis complete\n")
+
+# Put the results based on the repos into the elasticsearch mappings:
+
+for result in results:
+    for key, value in result.items():
+        for k, v in value.items():
+            parsed_data[key][k] = v
+

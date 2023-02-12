@@ -106,19 +106,23 @@ def dependabot_open_source(repo_path):
     return dependabot_output
 
 
-def run_analysis(repo_path):
+def run_analysis(args):
+
+    repo, path = args
     '''Run all the analysis tools on a repository'''
     # Run all the analysis tools on a repository and return the results as a dictionary
+    repo_path = os.path.join(path, repo)
+
     results = {}
     # Get git commit count
     results['git_commit_count'] = get_git_commit_count(repo_path)
     # Get git signed commit count
-    results['git_signed_commit_count'] = get_git_signed_commit_count(repo_path)
+    results['git_commit_signatures_count'] = get_git_signed_commit_count(repo_path)
 
     # if SNYK_API_KEY and SNYK_ORG_ID are not set, then skip snyk tests
     if os.getenv('SNYK_TOKEN') and os.getenv('SNYK_CFG_ORG'):
         # Get snyk open source vulnerabilities
-        results['snyk_open_source'] = snyk_open_source(repo_path)
+        results['snyk_dependency_scan_results'] = snyk_open_source(repo_path)
         # Get snyk code sast vulnerabilities
-        results['snyk_code_sast'] = snyk_code_sast(repo_path)
-    return results
+        results['snyk_sast_results'] = snyk_code_sast(repo_path)
+    return {repo: results}
