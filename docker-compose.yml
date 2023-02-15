@@ -1,0 +1,49 @@
+version: '2.2'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.7.0
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - elasticsearch
+
+  analysis:
+    # depends on elasticsearch container
+    depends_on:
+      - elasticsearch
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: analysis
+    environment:
+      - SNYK_CFG_ORG=${SNYK_CFG_ORG}
+      - SNYK_TOKEN=${SNYK_TOKEN}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./repos:/app/repos
+      - ./logs:/app/logs
+    networks:
+      - elasticsearch
+    entrypoint: ["python", "interim.py"]
+
+networks:
+  elasticsearch:

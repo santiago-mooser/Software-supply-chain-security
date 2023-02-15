@@ -1,9 +1,24 @@
 #!/bin/python
-import requests
 import json
-import argparse
+import logging
+import time
 
-version="1.0.0"
+import requests
+
+logger = logging.getLogger()
+warning = logger.warning
+info = logger.info
+debug = logger.debug
+error = logger.error
+
+'''
+Changelog:
+1.0.0: First working copy
+1.1.0: Added logging and retries to the API calls
+'''
+
+
+version="1.1.0"
 
 # Get data for most downloaded packages:
 def query_api(entries):
@@ -11,21 +26,37 @@ def query_api(entries):
     results = {}
 
     url = "https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json"
-    response = requests.get(url)
 
-    if response.status_code != 200:
-        print("Error getting file")
+    while True:
+        response = requests.get(url)
 
+        if response.status_code != 200:
+            error("Error getting file")
+            time.sleep(5)
+            continue
+        else:
+            break
+
+    info("Successfully retrieved data from PyPi")
     results.update({"pypi": response.json()["rows"][:entries]})
 
+    # Also get data for most starred repos on github
     url = f"https://api.github.com/search/repositories?q=language:python&sort=stars&order=desc&per_page={entries}"
-    response = requests.get(url)
 
-    if response.status_code != 200:
-        print("Error getting file")
+    while True:
+        response = requests.get(url)
 
-    else:
-        results.update({"github": response.json()})
+        if response.status_code != 200:
+            error("Error getting stats from github")
+            time.sleep(5)
+            continue
+        else:
+            break
+
+
+    results.update({"github": response.json()})
+
+    debug(f"Successfully retrieved data from github: {json.dumps(results, indent=4)}")
 
     return results
 
@@ -43,24 +74,29 @@ def parse_metadata_to_elasticseach_mapping(api_data):
         # We need to do an extra query to the PyPi API to get the repo URL
         url = f"https://pypi.org/pypi/{result['project']}/json"
 
-        response = requests.get(url)
+        while True:
+            response = requests.get(url)
+
+            if response.status_code != 200:
+                error(f"Error getting repo informaton for {result['project']} from PyPi")
+                time.sleep(5)
+                continue
+            else:
+                break
+
 
         description = ""
         repo_url = ""
 
-        if response.status_code != 200:
-            print("Error getting file")
-            Exception("Error getting file")
-        else:
-            repo_url = response.json()["info"]["project_urls"].get("Source")
-            if repo_url == "" or repo_url is None or "api" in repo_url:
-                repo_url = response.json()["info"]["project_urls"].get("Code")
-            if repo_url == "" or repo_url is None or "api" in repo_url:
-                repo_url = response.json()["info"]["project_urls"].get("Homepage")
-            if repo_url == "" or repo_url is None or "api" in repo_url:
-                repo_url = response.json()["info"]["package_url"]
+        repo_url = response.json()["info"]["project_urls"].get("Source")
+        if repo_url == "" or repo_url is None or "api" in repo_url:
+            repo_url = response.json()["info"]["project_urls"].get("Code")
+        if repo_url == "" or repo_url is None or "api" in repo_url:
+            repo_url = response.json()["info"]["project_urls"].get("Homepage")
+        if repo_url == "" or repo_url is None or "api" in repo_url:
+            repo_url = response.json()["info"]["package_url"]
 
-            description = response.json()["info"]["summary"]
+        description = response.json()["info"]["summary"]
 
         parsed_data.update({
             result["project"]: {
@@ -100,4 +136,5 @@ def parse_metadata_to_elasticseach_mapping(api_data):
             }
         })
 
+    debug(f"Successfully parsed data: {json.dumps(parsed_data, indent=4)}")
     return parsed_data
