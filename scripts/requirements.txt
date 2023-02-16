@@ -1,5 +1,5 @@
 tabulate
 requests
-elasticsearch
+elasticsearch<7.14.0
 GitPython
 tqdm

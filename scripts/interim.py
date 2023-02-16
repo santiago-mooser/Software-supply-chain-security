@@ -90,7 +90,7 @@ settings = {
     "index": "python",
     "mapping": REPO_ELASTICSEARCH_MAPPING,
     "es_protocol": "http",
-    "es_host": "localhost",
+    "es_host": "elasticsearch",
     "es_port": "9200"
 
 }
