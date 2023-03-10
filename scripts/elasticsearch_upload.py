@@ -33,7 +33,7 @@ def create_index(client, settings):
     return result
 
 def generate_actions(dataset):
-    for repo_metadata in dataset:
+    for _, repo_metadata in dataset.items():
         yield repo_metadata
 
 
@@ -44,7 +44,7 @@ def upload_to_elasticsearch(data, settings):
 
     result = create_index(client, settings)
 
-    debug(result)
+    info(result)
 
     info(f"Uploading data to Elasticsearch index {settings['index']}")
     progress = tqdm.tqdm(unit="docs", total=len(data))

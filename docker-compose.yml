@@ -38,12 +38,18 @@ services:
       - SNYK_CFG_ORG=${SNYK_CFG_ORG}
       - SNYK_TOKEN=${SNYK_TOKEN}
       - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=${LOG_LEVEL}
+      # - RESULTS_PER_LANGUAGE=5
+      # Change these if you want to use a different elasticsearch instance
+      # - ES_HOST=elasticsearch
+      # - ES_PORT=9200
+      # - ES_PROTOCOL=http
     volumes:
       - ./repos:/app/repos
       - ./logs:/app/logs
     networks:
       - elasticsearch
-    entrypoint: ["python", "interim.py"]
+    entrypoint: ["python", "main.py"]
 
 networks:
   elasticsearch:

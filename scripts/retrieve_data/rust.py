@@ -1,13 +1,12 @@
 #!/bin/python
 
 import requests
-import json
-import argparse
+import os
 
 version="1.0.0"
 
 # Get data for most downloaded rust packages:
-def query_rust_crates_api(entries):
+def query_api(entries):
     # Get the most downloaded packages:
     url = f"https://crates.io/api/v1/crates?sort=downloads&page=1&per_page={entries}"
     response = requests.get(url)
@@ -34,11 +33,23 @@ def parse_metadata_to_elasticseach_mapping(api_data):
                 "dependabot_results": {},
                 "snyk_sast_results": {},
                 "semgrep_results": {},
-                "git_commit_count": 0,
-                "git_commit_signatures_count": 0,
-                "git_commit_signatures_percentage": 0,
-                "package_signature": False
+                "git_commit_count": '',
+                "git_commit_signatures_count": '',
+                "git_commit_signatures_percentage": '',
+                "package_signature": '',
             }
         })
 
     return parsed_data
+
+
+
+def install_dependencies(repo_path):
+    '''Install the rust dependencies'''
+    print("Installing dependencies")
+    os.system(f"cd {repo_path} && cargo install")
+
+
+
+def name():
+    return "rust"

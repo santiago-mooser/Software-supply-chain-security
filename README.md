@@ -41,3 +41,19 @@ Simply run docker-compose while building the docker file:
 ```bash
 docker-compose up -d --build --no-deps --force-recreate
 ```
+
+This will:
+
+1. Build the container found in the scripts folder
+2. Run three containers:
+    - Elasticsearch to hold the analyzed data
+    - Kibana to visualize the data
+    - The container that runs the scripts that clone and analyze the code
+
+The container (called `analysis`) will do the following:
+
+1. Clone the top n packages of various programming languages and package managers (you can check `scripts/main.py` to see which ones)
+1. Run analysis on the cloned code, which includes:
+  - Check whether their commits are signed (using Git and GPG)
+  - Check whether their dependencies have vulnerabilities (using snyk)
+  - Check whether the code has any obvious security issues (using snyk code and semgrep)
