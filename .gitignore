@@ -16,3 +16,10 @@
 .vscode/
 
 .env
+repos/
+
+*__pycache__/
+
+logs/
+
+elasticsearch/
