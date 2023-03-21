@@ -91,10 +91,10 @@ def get_git_commit_count(repo_path):
 
     if int(total_commits) == 0:
         error(f"Could not get the number of commits for {repo_path}")
-        return '0'
+        return 0
 
     debug(f"Total commits for {repo_path}: {total_commits}")
-    return total_commits
+    return int(total_commits)
 
 
 def get_git_signed_commit_count(repo_path):
@@ -110,7 +110,7 @@ def get_git_signed_commit_count(repo_path):
     signed_commits = subprocess.check_output("git log --show-signature | grep 'gpg: Good signature' -B3 | grep 'commit' | awk '{print $2}' | wc -l", shell=True)
     signed_commits = signed_commits.decode('utf-8').strip()
 
-    return signed_commits
+    return int(signed_commits)
 
 
 def semgrep (repo_path):
@@ -161,37 +161,40 @@ def run_analysis(repo_path, language, parsed_data):
 
     # Get git commit count
     debug(f"Getting percentage of signed commits for {repo_path}")
-    parsed_data['git_commit_count'] = get_git_commit_count(repo_path)
+    parsed_data['git_commit_count'] = int(get_git_commit_count(repo_path))
 
     # Get git signed commit count
     debug(f"Getting percentage of signed commits for {repo_path}")
-    parsed_data['git_commit_signatures_count'] = get_git_signed_commit_count(repo_path)
+    parsed_data['git_commit_signatures_count'] = int(get_git_signed_commit_count(repo_path))
 
     # Get percentage of signed commits
     if int(parsed_data['git_commit_count']) > 0:
-        parsed_data['git_commit_signatures_percentage'] = str(int(parsed_data['git_commit_signatures_count']) / int(parsed_data['git_commit_count']) * 100)
+        parsed_data['git_commit_signatures_percentage'] = int(parsed_data['git_commit_signatures_count']) / int(parsed_data['git_commit_count']) * 100
     else:
-        parsed_data['git_commit_signatures_percentage'] = '0'
+        parsed_data['git_commit_signatures_percentage'] = 0
 
     debug(f"{repo_path} has {parsed_data['git_commit_signatures_count']}/{parsed_data['git_commit_count']} signed commits")
 
     # Run semgrep
-    # parsed_data['semgrep_results'] = semgrep(repo_path)
+    parsed_data['semgrep_results'] = semgrep(repo_path)
+    debug(f"Semgrep results for {repo_path}: {parsed_data['semgrep_results']}")
 
-    if not language.install_dependencies(repo_path):
-        info(f"Skipping analysis of {repo_path} due to missing dependencies")
-        return parsed_data
 
     # if SNYK_API_KEY and SNYK_ORG_ID are not set, then skip snyk tests
     if os.getenv('SNYK_TOKEN') and os.getenv('SNYK_CFG_ORG'):
 
         debug(f"SNYK_TOKEN and SNYK_CFG_ORG are set, running snyk tests")
 
-        # Get snyk open source vulnerabilities
-        parsed_data['snyk_dependency_scan_results'] = snyk_open_source(repo_path)
-
         # Get snyk code sast vulnerabilities
         parsed_data['snyk_sast_results'] = snyk_code_sast(repo_path)
 
+        if not language.install_dependencies(repo_path):
+            info(f"Skipping Snyk analysis of {repo_path} due to missing dependencies")
+            return parsed_data
+
+        # Get snyk open source vulnerabilities
+        parsed_data['snyk_dependency_scan_results'] = snyk_open_source(repo_path)
+
     info(f"Analysis of {repo_path} complete")
+    debug(f"Analysis results for {repo_path}: {parsed_data}")
     return parsed_data

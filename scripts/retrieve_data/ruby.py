@@ -1,10 +1,18 @@
 #!/bin/python
-import requests
 import json
 import logging
 import os
+import subprocess
 
-version="1.0.0"
+import requests
+
+logger = logging.getLogger()
+warning = logger.warning
+info = logger.info
+debug = logger.debug
+error = logger.error
+
+version = "1.0.0"
 
 
 logger = logging.getLogger()
@@ -54,10 +62,10 @@ def parse_metadata_to_elasticseach_mapping(api_data):
                 "dependabot_results": {},
                 "snyk_sast_results": {},
                 "semgrep_results": {},
-                "git_commit_count": '',
-                "git_commit_signatures_count": '',
-                "git_commit_signatures_percentage": '',
-                "package_signature": '',
+                "git_commit_count": 0,
+                "git_commit_signatures_count": 0,
+                "git_commit_signatures_percentage": 0,
+                "package_signature": 0,
             }
         })
 
@@ -69,7 +77,22 @@ def parse_metadata_to_elasticseach_mapping(api_data):
 def install_dependencies(repo_path):
     '''Install the ruby dependencies'''
     info("Installing dependencies")
-    os.system(f"cd {repo_path} && bundle install")
+
+    os.chdir(repo_path)
+
+    try:
+        results = subprocess.run(["bundle", "install"],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        error(f"Error installing dependencies for {repo_path}}")
+        return False
+
+    if results.returncode != 0:
+        error("Error installing dependencies")
+        error(results.stderr.decode("utf-8"))
+        return False
+
+    return True
 
 
 def name():

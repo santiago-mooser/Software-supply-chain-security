@@ -44,12 +44,16 @@ def clone_git_repo(repo_url, path):
                 return True
             except base.GitCommandError as e:
                 error(f"Error cloning from {repo_url}: {e}.\tRetrying...")
-                # Get the default branch name
-                repo = git.Repo.init(path)
-                default_branch = repo.config_reader().get_value("init", "defaultBranch")
-                # Delete the repo and try again
-                os.system(f"rm -rf {path}")
-                Repo.clone_from(repo_url, path, branch=default_branch)
-                continue
+                try:
+                    # Get the default branch name
+                    repo = git.Repo.init(path)
+                    default_branch = repo.config_reader().get_value("init", "defaultBranch")
+                    # Delete the repo and try again
+                    os.system(f"rm -rf {path}")
+                    Repo.clone_from(repo_url, path, branch=default_branch)
+                    continue
+                except:
+                    error(f"Error cloning from {repo_url}: {e}.\tRetrying...")
+                    continue
 
         return False

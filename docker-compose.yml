@@ -39,7 +39,8 @@ services:
       - SNYK_TOKEN=${SNYK_TOKEN}
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=${LOG_LEVEL}
-      # - RESULTS_PER_LANGUAGE=5
+      - RESULTS_PER_LANGUAGE=${RESULTS_PER_LANGUAGE}
+      - NUM_OF_THREADS=${NUM_OF_THREADS}
       # Change these if you want to use a different elasticsearch instance
       # - ES_HOST=elasticsearch
       # - ES_PORT=9200

@@ -5,3 +5,5 @@ GitPython
 tqdm
 # semgrep
 coloredlogs
+jsonschema==4.17.3
+semgrep

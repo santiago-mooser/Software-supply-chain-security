@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-import argparse
 import logging
-import json
 import os
 from logging import debug, error, info, warning
 from multiprocessing import Pool
+from datetime import datetime
+import json
 
 import git_clone
 from retrieve_data import javascript, python, ruby, rust
@@ -25,41 +25,52 @@ REPO_ELASTICSEARCH_MAPPING = {
             "dependabot_results": {"type": "object"},
             "snyk_sast_results": {"type": "object"},
             "semgrep_results": {"type": "object"},
-            "git_commit_count": {"type": "text"},
-            "git_commit_signatures_count": {"type": "text"},
-            "git_commit_signatures_percentage": {"type": "text"},
+            "git_commit_count": {"type": "int"},
+            "git_commit_signatures_count": {"type": "int"},
+            "git_commit_signatures_percentage": {"type": "int"},
             "package_signature": {"type": "text"},
         }
     }
 }
 
+DATETIME=datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
 # Set the log level to be info by default and show which module the log is coming from
 logging_level = os.environ.get("LOG_LEVEL", "INFO")
+
 logging.basicConfig(
     level=logging_level,
     format="%(asctime)s - %(module)s - %(levelname)s [%(filename)s:%(lineno)s - %(funcName)20s()] - %(message)s",
-    handlers=[logging.FileHandler("logs/interim.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler(f"logs/{DATETIME}.log"),
+        logging.StreamHandler(),
+    ],
 )
 
 
 def clone_and_analyze(settings):
     """This function clones a given git repo, run analysis scripts on it and uploads the results to elasticsearch."""
 
-    repo_url, path, language, parsed_data = settings
+    repo_url, repo_name, language, parsed_data = settings
 
     # Call the module
     language = getattr(__import__(f"retrieve_data.{language}"), language)
 
+    # Get repo path from environment
+    repo_path = os.environ.get("REPO_PATH", "/tmp/repos")
+    path = os.path.join(repo_path, repo_name)
+
     # Clone the git repo
     info(f"Cloning {repo_url} into {path}...")
-    git_clone.clone_git_repo(repo_url, path)
+    if not git_clone.clone_git_repo(repo_url, path):
+        error(f"Failed to clone {repo_url} into {path}. Skipping analysis...")
+        return {}
 
     # Run analysis scripts
     info(f"Running analysis scripts for {path}...")
     results = code_analysis.run_analysis(path, language, parsed_data)
 
-    return results
+    return {repo_name: results}
 
 
 def retrieve_data_and_run_analysis_scripts(language):
@@ -78,12 +89,13 @@ def retrieve_data_and_run_analysis_scripts(language):
     parsed_data = language.parse_metadata_to_elasticseach_mapping(api_data)
 
     # use Pool to download git repos in parallel
-    p = Pool(5)
+    num_of_threads = int(os.environ.get("NUM_OF_THREADS", 12))
+    p = Pool(num_of_threads)
 
     arguments = [
         (
             value["repo_url"],
-            os.path.join("/app/repos/", value["repo_name"]),
+            repo_name,
             language.name(),
             value,
         )
@@ -101,7 +113,6 @@ def retrieve_data_and_run_analysis_scripts(language):
         result_dict.update(result)
 
     # Upload the results to Elasticsearch
-    info(f"Uploading results for {language.name}...")
     elasticsearch_settings = {
         "index": language.name(),
         "mapping": REPO_ELASTICSEARCH_MAPPING,
@@ -114,16 +125,22 @@ def retrieve_data_and_run_analysis_scripts(language):
     info(f"Uploading results to Elasticsearch for to index {language.name()}...")
     elasticsearch_upload.upload_to_elasticsearch(result_dict, elasticsearch_settings)
 
-    return(result_dict)
+    return result_dict
 
 
 if __name__ == "__main__":
 
     final_results = {}
 
-    for language in (python, ruby, rust):
+    for language in (javascript,python, rust, ruby):
         final_results.update(
             {language: retrieve_data_and_run_analysis_scripts(language)}
         )
 
-    print(json.dumps(final_results, indent=4))
+    # print out the final results to a file named {DATETIME}_results.json
+    file_name = f"logs/{DATETIME}_results.json"
+
+    #print results to file
+    with open(file_name, 'w') as outfile:
+        json.dump(json.dumps(final_results, indent=4), outfile)
+

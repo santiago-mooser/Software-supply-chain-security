@@ -144,10 +144,10 @@ def parse_metadata_to_elasticseach_mapping(api_data):
                     "dependabot_results": {},
                     "snyk_sast_results": {},
                     "semgrep_results": {},
-                    "git_commit_count": "",
-                    "git_commit_signatures_count": "",
-                    "git_commit_signatures_percentage": "",
-                    "package_signature": "",
+                    "git_commit_count": 0,
+                    "git_commit_signatures_count": 0,
+                    "git_commit_signatures_percentage": 0,
+                    "package_signature": False,
                 }
             }
         )
@@ -159,11 +159,11 @@ def parse_metadata_to_elasticseach_mapping(api_data):
 
 def install_dependencies(repo_path):
     """Install the dependencies found in the requirements.py file"""
-    debug(f"Installing dependencies for {repo_path}")
+    info(f"Installing dependencies for {repo_path}")
     # Install the dependencies found in the requirements.py file
     if not os.path.isdir(repo_path):
         error("The path to the repository is not valid")
-        return
+        return False
 
     os.chdir(repo_path)
     requirements_file = os.path.join(repo_path, "requirements.txt")
@@ -173,7 +173,10 @@ def install_dependencies(repo_path):
             ["pip3", "install", "-r", requirements_file], capture_output=True, text=True
         )
         if results.stderr != '':
-            error(f"Error installing dependencies: {results.stderr}")
+            error(f"Error installing dependencies for {repo_path}")
+            debug(f"Error: {results.stderr}")
+            return False
+        return True
     else:
         debug(f"No requirements.txt file found in {repo_path}")
 

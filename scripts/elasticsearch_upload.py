@@ -30,21 +30,24 @@ def create_index(client, settings):
         },
         ignore=400,
     )
+    debug(f"Result of creating index pattern for {settings['index']}: {result}")
     return result
 
 def generate_actions(dataset):
-    for _, repo_metadata in dataset.items():
-        yield repo_metadata
+    for _, item in dataset.items():
+        yield item
 
 
 def upload_to_elasticsearch(data, settings):
 
+    debug(f"Data: {data}")
+
     info(f"Connecting to Elasticsearch cluster at {settings['es_protocol']}://{settings['es_host']}:{settings['es_port']}")
     client = connect_to_server(settings["es_protocol"], settings["es_host"], settings["es_port"])
 
-    result = create_index(client, settings)
+    # result = create_index(client, settings)
 
-    info(result)
+    # info(result)
 
     info(f"Uploading data to Elasticsearch index {settings['index']}")
     progress = tqdm.tqdm(unit="docs", total=len(data))
@@ -53,3 +56,4 @@ def upload_to_elasticsearch(data, settings):
         progress.update(1)
         successes += ok
     info(f"Indexed {successes}/{len(data)} documents to Elasticsearch index {settings['index']}")
+    progress.close()

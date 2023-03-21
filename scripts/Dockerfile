@@ -8,10 +8,18 @@ COPY requirements.txt .
 # Install requirements
 RUN apk add --no-cache \
         python3 \
+        python3-dev \
         wget \
         curl \
         git \
-        gpg
+        gpg \
+        gcc \
+        build-base \
+        make \
+        zlib-dev \
+        libffi-dev \
+        openssl-dev \
+        musl-dev
 
 ENV PYTHONUNBUFFERED=1
 RUN python3 -m ensurepip
