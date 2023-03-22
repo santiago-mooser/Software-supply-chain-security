@@ -84,7 +84,7 @@ def install_dependencies(repo_path):
         results = subprocess.run(["bundle", "install"],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except:
-        error(f"Error installing dependencies for {repo_path}}")
+        error(f"Error installing dependencies for {repo_path}")
         return False
 
     if results.returncode != 0:
