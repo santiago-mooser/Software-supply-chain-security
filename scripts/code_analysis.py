@@ -74,8 +74,32 @@ def snyk_code_sast(repo_path):
     except:
         error(results.stdout)
         return {}
-    debug(snyk_output)
-    return snyk_output
+    debug(f"snyk code test output for {repo_path}: {snyk_output}")
+
+    # extract the priority score and name of the vulnerability, then count them and put the in a dictionary
+    vuln_dict = {}
+    max_priority_score = 0
+
+    runs = snyk_output.get("runs")
+    for result in runs[0].get("results"):
+        index = result.get("ruleIndex")
+        level = result.get("level")
+        priority_score = result.get("properties").get("priorityScore")
+        message = result.get("message").get("text")
+        max_priority_score = max(max_priority_score, priority_score)
+
+        vuln_dict.update({f"vuln_{index}": {
+                "level": level,
+                "priority_score": priority_score,
+                "message": message
+            }})
+
+    vuln_dict.update({"max_priority_score": max_priority_score})
+    vuln_dict.update({"total_vulnerabilities": len(vuln_dict)})
+
+    debug(f"vuln_dict for {repo_path}: {vuln_dict}")
+
+    return vuln_dict
 
 
 def get_git_commit_count(repo_path):

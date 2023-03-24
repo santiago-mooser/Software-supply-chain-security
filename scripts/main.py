@@ -142,5 +142,5 @@ if __name__ == "__main__":
 
     #print results to file
     with open(file_name, 'w') as outfile:
-        json.dump(json.dumps(final_results, indent=4), outfile)
+        json.dump(final_results, outfile)
 
