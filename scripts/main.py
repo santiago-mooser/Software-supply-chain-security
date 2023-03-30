@@ -132,10 +132,14 @@ if __name__ == "__main__":
 
     final_results = {}
 
-    for language in (javascript,python, rust, ruby):
-        final_results.update(
-            {language: retrieve_data_and_run_analysis_scripts(language)}
-        )
+    try:
+
+        for language in (javascript,python, rust, ruby):
+            final_results.update(
+                {language: retrieve_data_and_run_analysis_scripts(language)}
+            )
+    except:
+        error("Something went wrong. Exiting...", exc_info=True)
 
     # print out the final results to a file named {DATETIME}_results.json
     file_name = f"logs/{DATETIME}_results.json"
