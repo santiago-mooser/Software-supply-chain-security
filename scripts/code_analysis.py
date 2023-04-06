@@ -179,6 +179,26 @@ def dependabot_open_source(repo_path):
     return dependabot_output
 
 
+def snyk_monitor(repo_path):
+    '''Use snyk to monitor a repository'''
+    debug(f"Running snyk monitor on {repo_path}")
+    # Run the snyk monitor command with a json output and return the results
+    # as a dictionary
+    results={}
+    results =  subprocess.run(
+        ['snyk', 'monitor', '--json', repo_path], capture_output=True, text=True
+    )
+    if results.stderr != '':
+        error (results.stderr)
+
+    try:
+        snyk_output = json.loads(results.stdout)
+    except:
+        error(results.stdout)
+        return {}
+    debug(f"Snyk output for {repo_path}: {snyk_output}")
+    return snyk_output
+
 
 def run_analysis(repo_path, language, parsed_data):
     '''Run all the analysis tools on a repository'''
@@ -218,6 +238,8 @@ def run_analysis(repo_path, language, parsed_data):
 
         # Get snyk open source vulnerabilities
         parsed_data['snyk_dependency_scan_results'] = snyk_open_source(repo_path)
+
+        snyk_monitor(repo_path)
 
     info(f"Analysis of {repo_path} complete")
     debug(f"Analysis results for {repo_path}: {parsed_data}")
