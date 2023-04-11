@@ -76,7 +76,7 @@ def install_dependencies(repo_path):
 
     os.chdir(repo_path)
     results = subprocess.run(
-        ["npm", "install"],capture_output=True, text=True
+        ["npm", "install", "--force"],capture_output=True, text=True
     )
     if results.stderr != '':
         error(f"Error installing dependencies for {repo_path}: {results.stderr}")

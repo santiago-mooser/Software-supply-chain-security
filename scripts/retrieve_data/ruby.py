@@ -52,22 +52,27 @@ def parse_metadata_to_elasticseach_mapping(api_data):
 
     for result in results:
 
-        parsed_data.update({
-            result["name"]: {
-                "repo_name": result["name"],
-                "repo_url": result["source_code_uri"],
-                "description": result["info"],
-                "version": result["version"],
-                "snyk_dependency_scan_results": {},
-                "dependabot_results": {},
-                "snyk_sast_results": {},
-                "semgrep_results": {},
-                "git_commit_count": 0,
-                "git_commit_signatures_count": 0,
-                "git_commit_signatures_percentage": 0,
-                "package_signature": 0,
-            }
-        })
+        try:
+            parsed_data.update({
+                result["name"]: {
+                    "repo_name": result["name"],
+                    "repo_url": result["source_code_uri"],
+                    "description": result["info"],
+                    "version": result["version"],
+                    "snyk_dependency_scan_results": {},
+                    "dependabot_results": {},
+                    "snyk_sast_results": {},
+                    "semgrep_results": {},
+                    "git_commit_count": 0,
+                    "git_commit_signatures_count": 0,
+                    "git_commit_signatures_percentage": 0,
+                    "package_signature": 0,
+                }
+            })
+        except:
+            error(f"Error parsing {result['name']}")
+            debug(f"Error parsing {result['name']} Data: {json.dumps(result, indent=4)}")
+            continue
 
     debug(f"Data: {json.dumps(parsed_data, indent=4)}")
 

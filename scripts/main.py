@@ -134,7 +134,9 @@ if __name__ == "__main__":
 
     try:
 
-        for language in (javascript,python, rust, ruby):
+
+        # for language in (javascript, python, rust, ruby):
+        for language in (javascript, python):
             final_results.update(
                 {language: retrieve_data_and_run_analysis_scripts(language)}
             )
